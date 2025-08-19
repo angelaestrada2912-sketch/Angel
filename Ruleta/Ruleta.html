@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ruleta del Trabajo en Equipo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    canvas {
+      border: 8px solid #2c3e50;
+      border-radius: 50%;
+      background: #fff;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background: #27ae60;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #219150;
+    }
+    #questionBox {
+      margin-top: 25px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      display: none;
+    }
+    .options label {
+      display: block;
+      margin: 10px;
+      padding: 10px;
+      border: 2px solid #3498db;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .options label:hover {
+      background: #3498db;
+      color: white;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #e67e22;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎡 Ruleta del Trabajo en Equipo</h1>
+  <canvas id="ruleta" width="400" height="400"></canvas>
+  <button onclick="girar()">🎯 Girar Ruleta</button>
+
+  <div id="questionBox">
+    <div id="pregunta"></div>
+    <div class="options" id="opciones"></div>
+    <button onclick="validar()">Responder</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const quizData = [
+      { question: "¿Cuál es un elemento esencial para el trabajo en equipo?", options: ["Competencia desleal", "Comunicación", "Individualismo", "Silencio"], answer: "Comunicación" },
+      { question: "¿Qué fomenta un buen trabajo en equipo?", options: ["Desconfianza", "Conflictos permanentes", "Colaboración", "Aislamiento"], answer: "Colaboración" },
+      { question: "¿Qué actitud favorece más el trabajo en equipo?", options: ["Escuchar a los demás", "Ignorar opiniones", "Imponer ideas", "Trabajar solo"], answer: "Escuchar a los demás" },
+      { question: "¿Qué valor es clave en un equipo?", options: ["Respeto", "Egoísmo", "Desinterés", "Orgullo"], answer: "Respeto" },
+      { question: "¿Qué ayuda a lograr metas comunes en equipo?", options: ["Objetivos compartidos", "Metas personales", "Competir entre sí", "No comunicarse"], answer: "Objetivos compartidos" }
+    ];
+
+    let ruleta = document.getElementById("ruleta");
+    let ctx = ruleta.getContext("2d");
+    let angulo = 0;
+    let selectedQuestion = null;
+
+    
+    function dibujarRuleta() {
+      let num = quizData.length;
+      let arc = (2 * Math.PI) / num;
+
+      quizData.forEach((q, i) => {
+        let start = i * arc;
+        ctx.beginPath();
+        ctx.fillStyle = i % 2 === 0 ? "#3498db" : "#9b59b6";
+        ctx.moveTo(200, 200);
+        ctx.arc(200, 200, 200, start, start + arc);
+        ctx.fill();
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.rotate(start + arc / 2);
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText("P" + (i + 1), 120, 10);
+        ctx.restore();
+      });
+    }
+
+    dibujarRuleta();
+
+    
+    function girar() {
+      let spinAngle = Math.floor(Math.random() * 360) + 720; 
+      let spinTime = 3000;
+      let start = Date.now();
+
+      function animate() {
+        let now = Date.now();
+        let elapsed = now - start;
+
+        if (elapsed < spinTime) {
+          angulo = (spinAngle * (elapsed / spinTime)) * Math.PI / 180;
+          ctx.clearRect(0, 0, 400, 400);
+          ctx.save();
+          ctx.translate(200, 200);
+          ctx.rotate(angulo);
+          ctx.translate(-200, -200);
+          dibujarRuleta();
+          ctx.restore();
+          requestAnimationFrame(animate);
+        } else {
+          mostrarPregunta();
+        }
+      }
+      animate();
+    }
+
+    
+    function mostrarPregunta() {
+      let num = quizData.length;
+      let arc = (2 * Math.PI) / num;
+      let selected = Math.floor(((2 * Math.PI) - (angulo % (2 * Math.PI))) / arc) % num;
+      selectedQuestion = quizData[selected];
+
+      document.getElementById("questionBox").style.display = "block";
+      document.getElementById("pregunta").innerText = selectedQuestion.question;
+      document.getElementById("opciones").innerHTML = selectedQuestion.options.map(op => `
+        <label>
+          <input type="radio" name="respuesta" value="${op}"> ${op}
+        </label>
+      `).join("");
+      document.getElementById("result").innerText = "";
+    }
+
+    
+    function validar() {
+      let respuesta = document.querySelector('input[name="respuesta"]:checked');
+      if (!respuesta) {
+        alert("Selecciona una respuesta.");
+        return;
+      }
+      let result = document.getElementById("result");
+      if (respuesta.value === selectedQuestion.answer) {
+        result.innerText = "✅ Correcto";
+        result.style.color = "green";
+      } else {
+        result.innerText = "❌ Incorrecto. La respuesta es: " + selectedQuestion.answer;
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>
